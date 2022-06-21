@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}
+<title>Product</title>
+{% endblock%}
+
+{% block body %}
+
+<div class="product__content">
+    <div class="product__content__text">
+        <h1 class="title">{{stats.product_name}}</h1>
+        <p class="sub-title">Opinions: {{stats.opinions_count}}</p>
+        <p class="sub-title">Pros: {{stats.pros_count}}</p>
+        <p class="sub-title">Cons: {{stats.cons_count}}</p>
+        <p class="sub-title">Score: {{stats.average_score}}</p>
+    </div>
+    <div class="product__content__charts">
+        <img src="../static/plots/{{product_id}}_recommendations.png" alt="" class="chart">
+        <img src="../static/plots/{{product_id}}_stars.png" alt="" class="chart">
+    </div>
+</div>
+
+{% endblock%}
