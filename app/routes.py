@@ -2,6 +2,7 @@ from app import app
 from flask import render_template, redirect, url_for, request
 import os
 import json
+import pandas as pd
 from app.models.product import Product
 
 @app.route('/')
@@ -31,7 +32,9 @@ def product(product_id):
     product.import_product()
     stats = product.stats_to_dict()
     opinions = product.opinions_to_df()
-    return render_template("product.html", product_id=product_id, stats=stats, opinions=opinions)
+    s = open(f'app/opinions/{product_id}.json', encoding="utf8")
+    data = json.load(s)
+    return render_template("product.html", product_id=product_id, stats=stats, opinions=opinions, data=data)
 
 @app.route('/products')
 def products():
