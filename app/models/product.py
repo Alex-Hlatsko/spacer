@@ -1,145 +1,143 @@
-import os
-import json
-import requests
-import pandas as pd
-import numpy as np
 from bs4 import BeautifulSoup
-from app.utils import get_item
+import requests, json, io
+import pandas as pd
+
+
 from app.models.opinion import Opinion
-from matplotlib import pyplot as plt
+from app.models.utils import InvalidIdError
 
 class Product():
-    def __init__(self, product_id, opinions=[], product_name="", opinions_count=0, pros_count=0, cons_count=0, average_score=0):
-        self.product_id = product_id
-        self.product_name = product_name
-        self.opinions = opinions
-        self.opinions_count = opinions_count
-        self.pros_count = pros_count
-        self.cons_count = cons_count
-        self.average_score = average_score
+  def __init__(self, id, name="", averageScore=0):
+    self.id = id
+    self.name = name
+    self.opinions = []
+    self.averageScore = averageScore
 
-    def extract_name(self):
-        url = f"https://www.ceneo.pl/{self.product_id}#tab=reviews"
-        response = requests.get(url)
-        page = BeautifulSoup(response.text, "html.parser")
-        self.product_name = get_item(page,"h1.product-top__product-info__name")
-        return self
+  # Get Product Name 
+  def extract_name(product_page_soup):
+    if product_page_soup.find("h1", class_="product-top__product-info__name"):
+      return product_page_soup.find("h1", class_="product-top__product-info__name").text
+    return ""
+  
+  # Get Product Score 
+  def extract_score(product_page_soup):
+    if product_page_soup.find("span", class_="product-review__score"):
+      return float(product_page_soup.find("span", class_="product-review__score")['content'])
+    return 0
+  
+  # Get Opinions PAGES
+  def extract_opinions_pages(product_page_soup):
+    opinions_count = int(product_page_soup.find('span', class_="product-review__qo").find('span').text)
+    return opinions_count // 10 + 1 if opinions_count % 10 != 0 else opinions_count // 10
 
-    def extract_opinions(self):
-        url = f"https://www.ceneo.pl/{self.product_id}#tab=reviews"
-        while(url):
-            response = requests.get(url)
-            page = BeautifulSoup(response.text, "html.parser")
-            opinions = page.select("div.js_product-review")
-            for opinion in opinions:
-                single_opinion = Opinion().extract_opinion(opinion)
-                self.opinions.append(single_opinion)
-            try:
-                url = "https://www.ceneo.pl"+get_item(page,"a.pagination__next","href")
-            except TypeError:
-                url = None
-        return self
+  # Get All Opinions On Pages
+  def extract_opinions(opinionsPageSoup):
+    # - Get HTML for Opinions On Current page
+    htmlOpinions = opinionsPageSoup.find_all('div', class_="js_product-review")
+    # - Parse HTML Opinions
+    parsedOpinions = []
+    for htmlOpinion in htmlOpinions:
+      parsedOpinions.append(Opinion.parse_html_opinion(htmlOpinion))
+    return parsedOpinions
     
-    def opinions_to_df(self):
-        opinions = pd.read_json(json.dumps(self.opinions_to_dict()))
-        opinions["stars"] = opinions["stars"].map(lambda x: float(x.split("/")[0].replace(",", ".")))
-        return opinions
-
-    def calculate_stats(self):
-        opinions = self.opinions_to_df()
-        self.opinions_count = len(opinions)
-        self.pros_count = int(opinions["pros"].map(bool).sum())
-        self.cons_count = int(opinions["cons"].map(bool).sum())
-        self.average_score = opinions["stars"].mean().round(2)
-        return self
+  # Convert JSON format to CSV or XLSX
+  def convert_json(jsonContent, dataFormat):
+    df = pd.read_json(jsonContent)
+    if dataFormat == "csv":
+      return df.to_csv()
+    elif dataFormat == "xlsx":
+      output = io.BytesIO()
+      df.to_excel(output)
+      return output.getvalue()
     
-    def draw_charts(self):
-        opinions = self.opinions_to_df()
-        if not os.path.exists("app/static/plots"):
-            os.makedirs("app/static/plots")
-        recommendation = opinions["recommendation"].value_counts(dropna=False).sort_index().reindex(["Nie polecam", "Polecam", None], fill_value=0)
-        recommendation.plot.pie(
-            label="",
-            autopct = lambda p: '{:.1f}%'.format(round(p)) if p > 0 else '',
-            colors = ["crimson", "forestgreen", "lightskyblue"],
-            labels = ["Nie polecam", "Polecam", "Nie mam zdania"]
-        )
-        plt.title("Rekomendacje")
-        plt.savefig(f"app/static/plots/{self.product_id}_recommendations.png")
-        plt.close()
-        stars = opinions["stars"].value_counts().sort_index().reindex(list(np.arange(0,5.5,0.5)), fill_value=0)
-        stars.plot.bar(
-            color = "pink"
-        )
-        plt.title("Oceny produktu")
-        plt.xlabel("Liczba gwiazdek")
-        plt.ylabel("Liczba opinii")
-        plt.grid(True, axis="y")
-        plt.xticks(rotation=0)
-        plt.savefig(f"app/static/plots/{self.product_id}_stars.png")
-        plt.close()
-        return self
+  # Extracts All Product's Opinions
+  def extract_info(self):
+    # - Get HTML Code For Product Page
+    product_page_soup = BeautifulSoup(requests.get(f'https://www.ceneo.pl/{self.id}').text, 'lxml')
+    if product_page_soup.find('div', class_="error-page"):
+      raise InvalidIdError("Invalid id!")
+    self.name = Product.extract_name(product_page_soup)
+    self.averageScore = Product.extract_score(product_page_soup)
+    if product_page_soup.find('li', class_="reviews_new"):
+      return
+    opinionsPages = Product.extract_opinions_pages(product_page_soup)
+    parsedOpinions = []
+    for i in range(1, opinionsPages + 1):
+      opinionsPageSoup = BeautifulSoup(requests.get(f'https://www.ceneo.pl/{self.id}/opinie-{i}').text, 'lxml')
+      parsedOpinions += Product.extract_opinions(opinionsPageSoup)
+    # - Create Opinion Objects And Add Them To Opinions Array
+    for parsedOpinion in parsedOpinions:
+      self.opinions.append(Opinion(*parsedOpinion.values()))
+      
 
-    def __str__(self) -> str:
-        return f"""product_id: {self.product_id}<br>
-        product_name: {self.product_name}<br>
-        opinions_count: {self.opinions_count}<br>
-        pros_count: {self.pros_count}<br>
-        cons_count: {self.cons_count}<br>
-        average_score: {self.average_score}<br>
-        opinions: <br><br>
-        """ + "<br><br>".join(str(opinion) for opinion in self.opinions)
+  # Returns Opinions As Dictionaries In A List
+  def get_opinions_dictionary_list(self):
+    opinions_dictionary_list = []
+    for opinion in self.opinions:
+      opinions_dictionary_list.append(opinion.get_opinion_dictionary())
+    return opinions_dictionary_list
 
-    def __repr__(self) -> str:
-        return f"Product(product_id={self.product_id}, product_name={self.product_name}, opinions_count={self.opinions_count}, pros_count={self.pros_count}, cons_count={self.cons_count}, average_score={self.average_score}, opinions: [" + ", ".join(opinion.__repr__() for opinion in self.opinions) + "])"
-
-    def to_dict(self) -> dict:
-        return {
-            "product_id": self.product_id,
-            "product_name": self.product_name,
-            "opinions_count": self.opinions_count,
-            "pros_count": self.pros_count,
-            "cons_count": self.cons_count,
-            "average_score": self.average_score,
-            "opinions": [opinion.to_dict() for opinion in self.opinions]
-        }
+  # Return JSON-formatted Opinions
+  def get_opinions_json(self):
+    return json.dumps(self.get_opinions_dictionary_list(), indent=4)
+  
+  # Converts Opinions From JSON format to Opinion Object Format
+  def set_opinions_from_json(self, jsonOpinions):
+    opinions = []
+    for opinion in json.loads(jsonOpinions):
+      opinions.append(Opinion(*opinion.values()))
+    self.opinions = opinions
     
-    def stats_to_dict(self):
-        return {
-            "product_id": self.product_id,
-            "product_name": self.product_name,
-            "opinions_count": self.opinions_count,
-            "pros_count": self.pros_count,
-            "cons_count": self.cons_count,
-            "average_score": self.average_score,
-        }
+  # Returns Products Details (id, name, average score, opinions' count, upsides and downisides count)
+  def get_product_details(self):
+    if self.opinions:
+      
+      df = pd.read_json(self.get_opinions_json())
+      # - Count number of upsides
+      upsidesCount = 0
+      downsidesCount = 0
+      for row in df['upsides']:
+        if row:
+          upsidesCount += len(row.split(','))
+        
+      # - Count number of downsides
+      for row in df['downsides']:
+        if row:
+          downsidesCount += len(row.split(','))
+            
+      return {
+        "id": self.id,
+        "name": self.name,
+        "averageScore": self.averageScore,
+        "opinions_count": len(self.opinions),
+        "upsidesCount": upsidesCount,
+        "downsidesCount": downsidesCount
+      }
+    else:
+      return {
+        "id": self.id,
+        "name": self.name,
+        "averageScore": self.averageScore,
+        "opinions_count": 0,
+        "upsidesCount": 0,
+        "downsidesCount": 0
+      }
     
-    def opinions_to_dict(self):
-        return [opinion.to_dict() for opinion in self.opinions]
-
-    def export_opinions(self):
-        if not os.path.exists("app/opinions"):
-            os.makedirs("app/opinions")
-        with open(f"app/opinions/{self.product_id}.json", "w", encoding="UTF-8") as jf:
-            json.dump(self.opinions_to_dict(), jf, indent=4, ensure_ascii=False)
-
-    def export_product(self):
-        if not os.path.exists("app/products"):
-            os.makedirs("app/products")
-        with open(f"app/products/{self.product_id}.json", "w", encoding="UTF-8") as jf:
-            json.dump(self.stats_to_dict(), jf, indent=4, ensure_ascii=False)
+  # Sorts Opinions Depending On Column and Direction
+  def sort_opinions(self, sortColumn, sortDirection):
+    if(self.opinions):
+      opinionsDf = pd.read_json(self.get_opinions_json())
+      sortedOpinions = opinionsDf.sort_values(sortColumn, ascending = False if sortDirection == 'asc' else True ).to_json(orient='records')
+      self.set_opinions_from_json(sortedOpinions)
     
-    def import_product(self):
-        if os.path.exists(f"app/products/{self.product_id}.json"):
-            with open(f"app/products/{self.product_id}.json", "r", encoding="UTF-8") as jf:
-                product = json.load(jf)
-                self.product_id = product["product_id"]
-                self.product_name = product["product_name"]
-                self.opinions_count = product["opinions_count"]
-                self.pros_count = product["pros_count"]
-                self.cons_count = product["cons_count"]
-                self.average_score = product["average_score"]
-            with open(f"app/opinions/{self.product_id}.json", "r", encoding="UTF-8") as jf:
-                opinions = json.load(jf)
-                for opinion in opinions:
-                    self.opinions.append(Opinion(**opinion))
+  # Filters Opinions Depending On Column and Text
+  def filter_opinions(self, filterColumn, filterText):
+    if(self.opinions):
+      opinionsDf = pd.read_json(self.get_opinions_json())
+      filteredOpinions = opinionsDf.loc[opinionsDf[filterColumn].astype(str).str.contains(filterText)].to_json(orient='records')
+      self.set_opinions_from_json(filteredOpinions)
+    
+  # Counts How Many Of Different Values There Are In Column - AND - Return Dictionary With Different Values As Keys And Their Count As Values
+  def get_counted_column_values_dict(self, column):
+     df = pd.read_json(self.get_opinions_json())
+     return df[column].value_counts().to_dict()

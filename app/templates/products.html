@@ -5,34 +5,27 @@
 {% endblock%}
 
 {% block body %}
-
-<div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
-  {% for product in products %}
-    <div class="col">
-      <div class="card mb-4 rounded-3 shadow-sm">
-        <div class="card-header py-3">
-          <h4 class="my-0 fw-normal">{{a[loop.index-1].product_name}}</h4>
-        </div>
-        <div class="card-body">
-          <h1 class="card-title pricing-card-title">{{a[loop.index-1].average_score}}<small class="text-muted fw-light">/5</small></h1>
-          <ul class="list-unstyled mt-3 mb-4">
-            <li>Opinions: {{a[loop.index-1].opinions_count}}</li>
-            <li>Pros: {{a[loop.index-1].pros_count}}</li>
-            <li>Cons: {{a[loop.index-1].cons_count}}</li>
-          </ul>
-          <form action="{{url_for('product', product_id=product)}}">
-            <button class="w-100 btn btn-lg btn-outline-primary">Sign up for free</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  {% endfor %}
+<div>
+	{% for productInfo in productsInfos %}
+	<div>
+		<a href="/delete/{{productInfo.id}}">Delete</a>
+		<div>
+			Product {{productInfo.id}}:
+			<a href="/product/{{productInfo.id}}">{{productInfo.name}}</a>
+		</div>
+		<div>
+			<span>Average Score: {{productInfo.averageScore}}</span>
+			<span>Total Opinions: {{productInfo.opinions_count}}</span>
+			<span>Total Upsides: {{productInfo.upsidesCount}}</span>
+			<span>Total Downsides: {{productInfo.downsidesCount}}</span>
+		</div>
+		<div>
+			<a href="/download-json/{{productInfo.id}}">Download json</a>
+			<a href="/download-csv/{{productInfo.id}}">Download csv</a>
+			<a href="/download-xlsx/{{productInfo.id}}">Download xls</a>
+			<a href="/charts/{{productInfo.id}}">Download xls</a>
+		</div>
+	</div>
+	{%endfor%}
 </div>
 {% endblock%}
-
-
-
-
-
-  
-

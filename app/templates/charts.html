@@ -1,0 +1,74 @@
+{% extends 'base.html'%} 
+
+{% block title %}
+<title>Charts for {{product_id}}</title>
+{% endblock %} 
+
+{% block body %}
+<input type="hidden" id="firstChartData" value="{{firstChartData}}" />
+<input type="hidden" id="secondChartData" value="{{secondChartData}}" />
+<div class="flex flex-col items-center my-5 relative">
+	<a href="/product/{{request.view_args.id}}">Go back</a>
+	<h2>Charts</h2>
+	<p>The first pie chart shows us corresponding recommendation to total recommendation count ratio</p>
+	<div>
+		<canvas id="firstChart"></canvas>
+	</div>
+	<p>The second bar chart shows us how many of each amount of stars was given to the current product</p>
+	<div>
+		<canvas id="secondChart"></canvas>
+	</div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+	const firstChartData = JSON.parse(
+		document.querySelector("#firstChartData").value
+	);
+	const firstChartConfig = {
+		type: "pie",
+		data: {
+			labels: Object.keys(firstChartData),
+			datasets: [
+				{
+					label: "Positive/Negative opinions",
+					backgroundColor: ["rgba(67,146,241, .3)", "rgba(254,95,85 ,.3)"],
+					borderColor: ["rgba(67,146,241, 1)", "rgba(254,95,85 ,1)"],
+					borderWidth: 1,
+					data: Object.values(firstChartData),
+				},
+			],
+		},
+		options: {},
+	};
+	const firstChart = new Chart(
+		document.getElementById("firstChart"),
+		firstChartConfig
+	);
+
+	const secondChartData = JSON.parse(
+		document.querySelector("#secondChartData").value
+	);
+	const secondChartConfig = {
+		type: "bar",
+		data: {
+			labels: Object.keys(secondChartData),
+			datasets: [
+				{
+					label: "Positive/Negative opinions",
+					backgroundColor: ["rgba(67,146,241, .3)", "rgba(254,95,85 ,.3)"],
+					borderColor: ["rgba(67,146,241, 1)", "rgba(254,95,85 ,1)"],
+					borderWidth: 1,
+					data: Object.values(secondChartData),
+				},
+			],
+		},
+		options: {},
+	};
+	const secondChart = new Chart(
+		document.getElementById("secondChart"),
+		secondChartConfig
+	);
+</script>
+{% endblock %}

@@ -5,55 +5,38 @@
 {% endblock%}
 
 {% block body %}
-
-<div class="product__content">
-    <div class="product__content__text">
-        <h1 class="title">{{stats.product_name}}</h1>
-        <p class="sub-title">Opinions: {{stats.opinions_count}}</p>
-        <p class="sub-title">Pros: {{stats.pros_count}}</p>
-        <p class="sub-title">Cons: {{stats.cons_count}}</p>
-        <p class="sub-title">Score: {{stats.average_score}}</p>
-    </div>
-    <div class="product__content__charts">
-        <img src="../static/plots/{{product_id}}_recommendations.png" alt="" class="chart">
-        <img src="../static/plots/{{product_id}}_stars.png" alt="" class="chart">
-    </div>
+<div>
+	<h2>
+		Product {{product.id}}: {{product.name}}
+	</h2>
+	<form action="{{url_for(request.endpoint, **request.view_args)}}">
+		<input type="text" name="filter" placeholder="Insert filter text..."/>
+		<select name="column">
+			<option value="id" selected>id</option>
+			<option value="author">Author</option>
+			<option value="recommendation">Recommendation</option>
+			<option value="score">Score</option>
+			<option value="isPurchaseConfirmed">Confirmed purchase</option>
+			<option value="dateOpinionWritten">Review date</option>
+			<option value="dateProductBought">Purchase date</option>
+			<option value="votesYes">Usefulness</option>
+			<option value="votesNo">Uselessness</option>
+			<option value="content">Content</option>
+			<option value="upsides">Upsides</option>
+			<option value="downsides">Downsides</option>
+		</select>
+		<button type="submit">Filter</button>
+	</form>
+	<div>
+		{{ table }}
+	</div>
+	<div>
+		<a href="/download-json/{{product.id}}">Download json</a>
+		<a href="/download-csv/{{product.id}}">Download csv</a>
+		<a href="/download-xlsx/{{product.id}}">Download xls</a>
+	</div>
+	<div>
+		<a href="/charts/{{product.id}}">Charts</a>
+	</div>
 </div>
-
-<table class="table">
-  <thead>
-    <tr>
-      <th scope="col">opinion_id</th>
-      <th scope="col">author</th>
-      <th scope="col">recommendation</th>
-      <th scope="col">stars</th>
-      <th scope="col">content</th>
-      <th scope="col">useful</th>
-      <th scope="col">useless</th>
-      <th scope="col">publish_date</th>
-      <th scope="col">purchase_date</th>
-      <th scope="col">pros</th>
-      <th scope="col">cons</th>
-    </tr>
-  </thead>
-  <tbody>
-      {% for opin in data %}
-      <tr>
-          <th scope="row">{{data[loop.index-1].opinion_id}}</th>
-          <th scope="row">{{data[loop.index-1].author}}</th>
-          <th scope="row">{{data[loop.index-1].recommendation}}</th>
-          <th scope="row">{{data[loop.index-1].stars}}</th>
-          <th scope="row">{{data[loop.index-1].content}}</th>
-          <th scope="row">{{data[loop.index-1].useful}}</th>
-          <th scope="row">{{data[loop.index-1].useless}}</th>
-          <th scope="row">{{data[loop.index-1].publish_date}}</th>
-          <th scope="row">{{data[loop.index-1].purchase_date}}</th>
-          <th scope="row">{{data[loop.index-1].pros}}</th>
-          <th scope="row">{{data[loop.index-1].cons[0]}}</th>
-        </tr>
-      {% endfor %}
-    
-  </tbody>
-</table>
-
 {% endblock%}

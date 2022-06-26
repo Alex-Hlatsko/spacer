@@ -5,20 +5,16 @@
 {% endblock%}
 
 {% block body %}
-
-    {% if error %}
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="bi bi-heartbreak-fill"></i> <strong>{{error}}</strong>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+<div>
+	<h2>
+		Enter the product's id and start extracting!
+	</h2>
+  <form action="/extract" method="POST">
+    <input placeholder="Enter id..." type="text" name="product_id">
+    {% if error %} 
+    <span>{{error}}</span>
     {% endif %}
-
-<div class="search__container">
-    <h1 class="title">Write product <span>index</span></h1>
-    <form class="search__form" action="{{url_for('extraction')}}" method="POST">
-        <input type="text" class="form-control" id="product_id" name="product_id">
-        <button type="submit" class="btn btn-primary">Send</button>
-    </form>
+    <button type="submit">Extract</button>
+  </form>
 </div>
-
 {% endblock%}
