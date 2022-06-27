@@ -5,27 +5,24 @@
 {% endblock%}
 
 {% block body %}
-<div>
+<div class="d-flex">
 	{% for productInfo in productsInfos %}
-	<div>
-		<a href="/delete/{{productInfo.id}}">Delete</a>
-		<div>
-			Product {{productInfo.id}}:
-			<a href="/product/{{productInfo.id}}">{{productInfo.name}}</a>
+
+	<div class="card m-2" style="width: 20rem;">
+		<div class="card-body">
+		  <h5 class="card-title"><a class="text__red" href="/product/{{productInfo.id}}">{{productInfo.name}}</a></h5>
+		  <h6 class="card-subtitle mb-2 text__white">#{{productInfo.id}}</h6>
+		  <a class="text__red" href="/delete/{{productInfo.id}}">Delete</a>
+		  <p class="card-text text__white">Average Score: <span class="text__green">{{productInfo.averageScore}}</span></p>
+		  <p class="card-text text__white">Total Opinions: <span class="text__green">{{productInfo.opinions_count}}</span></p>
+		  <p class="card-text text__white">Total Upsides: <span class="text__green">{{productInfo.upsidesCount}}</span></p>
+		  <p class="card-text text__white">Total Downsides: <span class="text__green">{{productInfo.downsidesCount}}</span></p>
+		  <a class="btn m-2 fs-6" href="/download-json/{{productInfo.id}}" class="card-link">JSON</a>
+		  <a class="btn m-2 fs-6" href="/download-csv/{{productInfo.id}}" class="card-link">CSV</a>
+		  <a class="btn m-2 fs-6" href="/download-xlsx/{{productInfo.id}}" class="card-link">XML</a>
+		  <a class="btn m-2 fs-6" href="/charts/{{productInfo.id}}" class="card-link">Charts</a>
 		</div>
-		<div>
-			<span>Average Score: {{productInfo.averageScore}}</span>
-			<span>Total Opinions: {{productInfo.opinions_count}}</span>
-			<span>Total Upsides: {{productInfo.upsidesCount}}</span>
-			<span>Total Downsides: {{productInfo.downsidesCount}}</span>
-		</div>
-		<div>
-			<a href="/download-json/{{productInfo.id}}">Download json</a>
-			<a href="/download-csv/{{productInfo.id}}">Download csv</a>
-			<a href="/download-xlsx/{{productInfo.id}}">Download xls</a>
-			<a href="/charts/{{productInfo.id}}">Download xls</a>
-		</div>
-	</div>
+	  </div>
 	{%endfor%}
 </div>
 {% endblock%}

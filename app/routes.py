@@ -39,20 +39,21 @@ def extract():
       db.session.add(newCeneoProduct)
       db.session.commit()
       return redirect(f"/product/{product_id}")
+
       # - Errors
     except InvalidIdError:
       return redirect(url_for('extraction', error="Invalid Product ID"))
     except ProductAlreadyInDatabase:
-      return redirect(url_for('extraction', error="This Product Has Already Been Extracted And Add To Database"))
+      return redirect(url_for('extraction', error="Already In Database"))
     except OverflowError:
       return redirect(url_for('extraction', error="Invalid product ID"))
     except: 
-      return redirect(url_for('error404', error="Problems in Committing to DataBase, Please Check Your Product Id"))
+      return redirect(url_for('error404', error="Problems in Pushing to DataBase, Please Check Product Id"))
   else:
     return redirect("/extraction")
   
 @app.route("/products")
-def productsList():
+def products():
   try:
     # - Get Items From Database
     productsFromDb = CeneoProduct.query.order_by(CeneoProduct.dateCreated).all()
@@ -90,7 +91,7 @@ def product(id):
   except:
     return redirect(url_for('error404', error="There was an issue in loading product data!"))
   
-@app.route('/download-json/<int:id>')
+@app.route('/download-json/<id>')
 def downloadJson(id):
   try:
     product = CeneoProduct.query.get_or_404(id)
@@ -98,7 +99,7 @@ def downloadJson(id):
   except:
     return redirect(url_for('error404', error="Problems with downloading json!"))
     
-@app.route("/download-csv/<int:id>")
+@app.route("/download-csv/<id>")
 def downloadCsv(id):
   try:
     product = CeneoProduct.query.get_or_404(id)
@@ -107,7 +108,7 @@ def downloadCsv(id):
   except:
     return redirect(url_for('error404', error="Problems with downloading csv!"))
   
-@app.route("/download-xlsx/<int:id>")
+@app.route("/download-xlsx/<id>")
 def downloadXlsx(id):
   try:
     product = CeneoProduct.query.get_or_404(id)
@@ -116,7 +117,7 @@ def downloadXlsx(id):
   except:
     return redirect(url_for('error404', error="Problems with downloading xlsx!"))
 
-@app.route("/delete/<int:id>")
+@app.route("/delete/<id>")
 def delete(id):
   try:
     productToDelete = CeneoProduct.query.get_or_404(id)
@@ -126,8 +127,8 @@ def delete(id):
   except:
     return redirect(url_for('error404', error="There was an issue in deleting this product!"))
 
-@app.route("/charts/<int:id>")
-def plots(id):
+@app.route("/charts/<id>")
+def charts(id):
   try:
     productFromDb = CeneoProduct.query.get_or_404(id)
     product = Product(productFromDb.id, productFromDb.name, productFromDb.averageScore)

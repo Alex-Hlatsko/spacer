@@ -2,7 +2,6 @@ from bs4 import BeautifulSoup
 import requests, json, io
 import pandas as pd
 
-
 from app.models.opinion import Opinion
 from app.models.utils import InvalidIdError
 

@@ -6,37 +6,37 @@
 
 {% block body %}
 <div>
-	<h2>
+	<h2 class="title fs-3">
 		Product {{product.id}}: {{product.name}}
 	</h2>
 	<form action="{{url_for(request.endpoint, **request.view_args)}}">
-		<input type="text" name="filter" placeholder="Insert filter text..."/>
-		<select name="column">
-			<option value="id" selected>id</option>
-			<option value="author">Author</option>
-			<option value="recommendation">Recommendation</option>
-			<option value="score">Score</option>
-			<option value="isPurchaseConfirmed">Confirmed purchase</option>
-			<option value="dateOpinionWritten">Review date</option>
-			<option value="dateProductBought">Purchase date</option>
-			<option value="votesYes">Usefulness</option>
-			<option value="votesNo">Uselessness</option>
-			<option value="content">Content</option>
-			<option value="upsides">Upsides</option>
-			<option value="downsides">Downsides</option>
-		</select>
-		<button type="submit">Filter</button>
+		<div class="form__input">
+			<input class="form-control m-2 w-25" type="text" name="filter" placeholder="Insert filter text..."/>
+			<select class="form-control m-2 w-25" name="column">
+				<option value="id" selected>id</option>
+				<option value="author">Author</option>
+				<option value="recommendation">Recommendation</option>
+				<option value="score">Score</option>
+				<option value="isPurchaseConfirmed">Confirmed purchase</option>
+				<option value="dateOpinionWritten">Review date</option>
+				<option value="dateProductBought">Purchase date</option>
+				<option value="votesYes">Usefulness</option>
+				<option value="votesNo">Uselessness</option>
+				<option value="content">Content</option>
+				<option value="upsides">Upsides</option>
+				<option value="downsides">Downsides</option>
+			</select>
+		<button class="btn m-2" type="submit">Filter</button>
+		</div>
 	</form>
-	<div>
-		{{ table }}
+	<div class="scroll-table-body text-center">
+			{{ table }}	
 	</div>
-	<div>
-		<a href="/download-json/{{product.id}}">Download json</a>
-		<a href="/download-csv/{{product.id}}">Download csv</a>
-		<a href="/download-xlsx/{{product.id}}">Download xls</a>
-	</div>
-	<div>
-		<a href="/charts/{{product.id}}">Charts</a>
+	<div class="btns my-5">
+		<a class="btn" href="/download-json/{{product.id}}">JSON</a>
+		<a class="btn" href="/download-csv/{{product.id}}">CSV</a>
+		<a class="btn" href="/download-xlsx/{{product.id}}">XLS</a>
+		<a class="btn" href="/charts/{{product.id}}">Charts</a>
 	</div>
 </div>
 {% endblock%}
