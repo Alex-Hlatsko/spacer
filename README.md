@@ -17,5 +17,6 @@
 - Python
 - Flask
 - SQLite
+- Chart.js
 - HTML
 - CSS
