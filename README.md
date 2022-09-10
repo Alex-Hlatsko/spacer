@@ -11,3 +11,11 @@
 - install project
 - pip install -r requirements.txt
 - flask run
+
+## Technology
+
+- Python
+- Flask
+- SQLite
+- HTML
+- CSS
